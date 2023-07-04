@@ -19,6 +19,10 @@ namespace Filmes.Models
         [Required(ErrorMessage = "O campo Gênero é obrigatório.")]
         public string Genero { get; set; }
 
+        public Filme()
+        {
+        }
+
         public Filme(int id, string nome, string duracao, string diretor, string genero)
         {
             Id = id;

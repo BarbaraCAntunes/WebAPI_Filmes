@@ -10,7 +10,7 @@ namespace Filmes.Controllers
     public class FilmesController : ControllerBase
     {
         private readonly AppDbContext _context;
-        
+
         public FilmesController(AppDbContext context)
         {
             _context = context;
@@ -23,7 +23,15 @@ namespace Filmes.Controllers
         [MapToApiVersion("1.0")]
         public ActionResult<IEnumerable<Filme>> GetFilmes()
         {
-            return _context.Filmes.ToList();
+            var filmes = _context.Filmes.ToList();
+            if (_context.Filmes == null)
+            {
+                return Ok("Nenhum filme cadstrado!");
+            }
+            else
+            {
+                return Ok(filmes);
+            }
         }
 
         /// <summary>
@@ -40,7 +48,7 @@ namespace Filmes.Controllers
                 return NotFound("Filme não encontrado!");
             }
 
-            return filme;
+            return Ok(filme);
         }
 
         /// <summary>
@@ -72,6 +80,7 @@ namespace Filmes.Controllers
             return Ok("Filme atualizado com sucesso!");
         }
 
+
         /// <summary>
         /// Cria um novo filme.
         /// </summary>
@@ -82,7 +91,7 @@ namespace Filmes.Controllers
             _context.Filmes.Add(filme);
             _context.SaveChanges();
 
-            return CreatedAtAction("Filme criado!", new { id = filme.Id }, filme);
+            return CreatedAtAction(nameof(GetFilme), new { id = filme.Id }, filme);
         }
 
         /// <summary>
