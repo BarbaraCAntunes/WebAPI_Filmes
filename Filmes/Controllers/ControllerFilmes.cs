@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Filmes.Models;
-using Filmes.Mocks;
 
 
 namespace Filmes.Controllers
@@ -10,6 +9,13 @@ namespace Filmes.Controllers
     [ApiVersion("1.0")]
     public class FilmesController : ControllerBase
     {
+        private readonly AppDbContext _context;
+        
+        public FilmesController(AppDbContext context)
+        {
+            _context = context;
+        }
+
         /// <summary>
         /// Recupera todos os filmes.
         /// </summary>
@@ -17,7 +23,7 @@ namespace Filmes.Controllers
         [MapToApiVersion("1.0")]
         public ActionResult<IEnumerable<Filme>> GetFilmes()
         {
-            return MockData.Filmes;
+            return _context.Filmes.ToList();
         }
 
         /// <summary>
@@ -27,7 +33,7 @@ namespace Filmes.Controllers
         [MapToApiVersion("1.0")]
         public ActionResult<Filme> GetFilme(int id)
         {
-            var filme = MockData.Filmes.FirstOrDefault(f => f.Id == id);
+            var filme = _context.Filmes.FirstOrDefault(f => f.Id == id);
 
             if (filme == null)
             {
@@ -49,15 +55,19 @@ namespace Filmes.Controllers
                 return BadRequest("Os Ids não são iguais!");
             }
 
-            var filmeExistente = MockData.Filmes.FirstOrDefault(f => f.Id == id);
+            var filmeExistente = _context.Filmes.FirstOrDefault(f => f.Id == id);
 
             if (filmeExistente == null)
             {
                 return NotFound("Filme não encontrado!");
             }
 
-            var index = MockData.Filmes.IndexOf(filmeExistente);
-            MockData.Filmes[index] = filme;
+            filmeExistente.Nome = filme.Nome;
+            filmeExistente.Duracao = filme.Duracao;
+            filmeExistente.Diretor = filme.Diretor;
+            filmeExistente.Genero = filme.Genero;
+
+            _context.SaveChanges();
 
             return Ok("Filme atualizado com sucesso!");
         }
@@ -69,8 +79,8 @@ namespace Filmes.Controllers
         [MapToApiVersion("1.0")]
         public ActionResult<Filme> PostFilme(Filme filme)
         {
-            filme.Id = MockData.Filmes.Max(f => f.Id) + 1;
-            MockData.Filmes.Add(filme);
+            _context.Filmes.Add(filme);
+            _context.SaveChanges();
 
             return CreatedAtAction("Filme criado!", new { id = filme.Id }, filme);
         }
@@ -82,14 +92,15 @@ namespace Filmes.Controllers
         [MapToApiVersion("1.0")]
         public IActionResult DeleteFilme(int id)
         {
-            var filme = MockData.Filmes.FirstOrDefault(f => f.Id == id);
+            var filme = _context.Filmes.FirstOrDefault(f => f.Id == id);
 
             if (filme == null)
             {
                 return NotFound("Filme não encontrado!");
             }
 
-            MockData.Filmes.Remove(filme);
+            _context.Filmes.Remove(filme);
+            _context.SaveChanges();
 
             return Ok("O filme foi removido com sucesso!");
         }
